@@ -7,13 +7,14 @@ class AuthController {
         try {
             const user = await User.findOne({ username });
             if (!user) {
-                return res.render('login', { error: 'Invalid credentials' });
+                return res.render('login', { error: 'User not found' });
             }
 
             // If you use bcrypt, implement comparePassword accordingly
             const isMatch = await user.comparePassword(password);
             if (!isMatch) {
-                return res.render('login', { error: 'Invalid credentials' });
+                console.log(`Password mismatch for user "${username}". Entered: "${password}", Stored: "${user.password}"`);
+                return res.render('login', { error: 'Password mismatch' });
             }
 
             // Store user info in session if needed

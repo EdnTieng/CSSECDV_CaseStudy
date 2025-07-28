@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema({
 });
 
 userSchema.methods.comparePassword = function(password) {
-    // Logic to compare password (e.g., using bcrypt)
+    return this.password === password;
 };
 
 const User = mongoose.model('User', userSchema);
