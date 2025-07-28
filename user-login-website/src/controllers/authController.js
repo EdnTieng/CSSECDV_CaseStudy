@@ -1,19 +1,39 @@
+const User = require('../models/user');
+
 class AuthController {
     async login(req, res) {
-        // Dummy authentication logic for demonstration
         const { username, password } = req.body;
-        if (username === 'admin' && password === 'password') {
-            // Success: redirect to dashboard
+
+        try {
+            const user = await User.findOne({ username });
+            if (!user) {
+                return res.render('login', { error: 'Invalid credentials' });
+            }
+
+            // If you use bcrypt, implement comparePassword accordingly
+            const isMatch = await user.comparePassword(password);
+            if (!isMatch) {
+                return res.render('login', { error: 'Invalid credentials' });
+            }
+
+            // Store user info in session if needed
+            req.session.user = {
+                id: user._id,
+                username: user.username,
+                role: user.role
+            };
+
             res.redirect('/dashboard');
-        } else {
-            // Failure: reload login page with error
-            res.render('login', { error: 'Invalid credentials' });
+        } catch (err) {
+            console.error(err);
+            res.render('login', { error: 'An error occurred. Please try again.' });
         }
     }
 
     async logout(req, res) {
-        // Logic for user logout
-        // Destroy user session and redirect to login page
+        req.session.destroy(() => {
+            res.redirect('/login');
+        });
     }
 }
 
