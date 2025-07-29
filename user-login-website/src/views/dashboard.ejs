@@ -3,25 +3,284 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Dashboard</title>
-    <link rel="stylesheet" href="/styles.css">
+    <title>Dashboard - Secure Web Application</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-role {
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 1rem;
+            list-style: none;
+        }
+
+        .nav-menu a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .nav-menu a:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .main-content {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .welcome-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .welcome-section h2 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .last-login {
+            background: #e8f4fd;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-top: 1rem;
+            border-left: 4px solid #0066cc;
+        }
+
+        .role-based-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .content-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .content-card h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .content-card p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .action-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: transform 0.2s ease;
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .security-notice {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-top: 1rem;
+        }
+
+        .logout-button {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .logout-button:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .admin-only {
+            border-left: 4px solid #dc3545;
+        }
+
+        .rolea-only {
+            border-left: 4px solid #ffc107;
+        }
+
+        .roleb-only {
+            border-left: 4px solid #28a745;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>Welcome to Your Dashboard</h1>
-        <nav>
-            <ul>
-                <li><a href="/logout">Logout</a></li>
-            </ul>
-        </nav>
+    <header class="header">
+        <div class="header-content">
+            <h1>Secure Web Application Dashboard</h1>
+            <div class="user-info">
+                <span>Welcome, <strong><%= user.username %></strong></span>
+                <span class="user-role"><%= user.role %></span>
+            </div>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="/dashboard">Dashboard</a></li>
+                    <li><a href="/auth/profile">Profile</a></li>
+                    <li><a href="/auth/change-password">Change Password</a></li>
+                    <% if (user.role === 'Administrator') { %>
+                        <li><a href="/admin/users">User Management</a></li>
+                        <li><a href="/admin/audit-logs">Audit Logs</a></li>
+                    <% } %>
+                    <% if (user.role === 'RoleA') { %>
+                        <li><a href="/admin/users/manage">Manage Users</a></li>
+                    <% } %>
+                    <li><a href="/auth/logout" class="logout-button">Logout</a></li>
+                </ul>
+            </nav>
+        </div>
     </header>
-    <main>
-        <h2>Your Profile</h2>
-        <p>Here you can manage your account settings and view your information.</p>
-        <!-- Additional dashboard content can go here -->
+
+    <main class="main-content">
+        <div class="welcome-section">
+            <h2>Welcome to Your Secure Dashboard</h2>
+            <p>You are logged in as <strong><%= user.username %></strong> with role <strong><%= user.role %></strong>.</p>
+            
+            <% if (lastLoginAt) { %>
+                <div class="last-login">
+                    <strong>Last Login:</strong> <%= new Date(lastLoginAt).toLocaleString() %>
+                </div>
+            <% } %>
+
+            <div class="security-notice">
+                <strong>Security Notice:</strong> This application implements comprehensive security measures. All your actions are logged for security auditing purposes.
+            </div>
+        </div>
+
+        <div class="role-based-content">
+            <% if (user.role === 'Administrator') { %>
+                <div class="content-card admin-only">
+                    <h3>Administrator Functions</h3>
+                    <p>As an Administrator, you have full system control including user management, audit log access, and system configuration.</p>
+                    <a href="/admin/users" class="action-button">Manage Users</a>
+                    <a href="/admin/audit-logs" class="action-button">View Audit Logs</a>
+                </div>
+            <% } %>
+
+            <% if (user.role === 'RoleA') { %>
+                <div class="content-card rolea-only">
+                    <h3>Role A Functions</h3>
+                    <p>As a Role A user, you can manage Role B users within your scope, including creating, updating, and deleting their accounts.</p>
+                    <a href="/admin/users/manage" class="action-button">Manage Role B Users</a>
+                </div>
+            <% } %>
+
+            <% if (user.role === 'RoleB') { %>
+                <div class="content-card roleb-only">
+                    <h3>Role B Functions</h3>
+                    <p>As a Role B user, you can view and update your own profile information and change your password.</p>
+                    <a href="/auth/profile" class="action-button">View Profile</a>
+                    <a href="/auth/change-password" class="action-button">Change Password</a>
+                </div>
+            <% } %>
+
+            <div class="content-card">
+                <h3>Account Security</h3>
+                <p>Manage your account security settings and view your login history.</p>
+                <a href="/auth/change-password" class="action-button">Change Password</a>
+                <a href="/auth/profile" class="action-button">View Profile</a>
+            </div>
+
+            <div class="content-card">
+                <h3>System Information</h3>
+                <p>Account created: <%= new Date(user.createdAt).toLocaleDateString() %></p>
+                <p>Account status: <span style="color: <%= user.isActive ? '#28a745' : '#dc3545' %>"><%= user.isActive ? 'Active' : 'Inactive' %></span></p>
+                <% if (user.lastLoginAt) { %>
+                    <p>Last login: <%= new Date(user.lastLoginAt).toLocaleString() %></p>
+                <% } %>
+            </div>
+        </div>
     </main>
-    <footer>
-        <p>&copy; 2025 User Login Website</p>
-    </footer>
+
+    <script>
+        // Auto-refresh dashboard every 5 minutes to check for session validity
+        setInterval(() => {
+            fetch('/dashboard', { method: 'HEAD' })
+                .then(response => {
+                    if (response.status === 401) {
+                        window.location.href = '/auth/login';
+                    }
+                })
+                .catch(() => {
+                    // Silent fail - don't redirect on network errors
+                });
+        }, 300000); // 5 minutes
+
+        // Logout confirmation
+        document.querySelector('.logout-button').addEventListener('click', function(e) {
+            if (!confirm('Are you sure you want to logout?')) {
+                e.preventDefault();
+            }
+        });
+    </script>
 </body>
 </html>

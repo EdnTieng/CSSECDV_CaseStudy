@@ -3,27 +3,224 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <link rel="stylesheet" href="/styles.css">
+    <title>Secure Login - CSSECDV Case Study</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-header h1 {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 0.75rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #c33;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 0.75rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .login-button:active {
+            transform: translateY(0);
+        }
+
+        .security-notice {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            color: #666;
+            text-align: center;
+        }
+
+        .password-requirements {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background: #e8f4fd;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            color: #0066cc;
+        }
+
+        .password-requirements h4 {
+            margin-bottom: 0.5rem;
+            color: #004499;
+        }
+
+        .password-requirements ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .password-requirements li {
+            margin-bottom: 0.25rem;
+        }
+
+        .password-requirements li:before {
+            content: "✓ ";
+            color: #28a745;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
     <div class="login-container">
-        <h1>Login</h1>
+        <div class="login-header">
+            <h1>Secure Login</h1>
+            <p>CSSECDV Case Study - Secure Web Application</p>
+        </div>
+
         <% if (typeof error !== 'undefined' && error) { %>
-            <div class="error-message"><%= error %></div>
+            <div class="error-message">
+                <strong>Login Failed:</strong> <%= error %>
+            </div>
         <% } %>
-        <form action="/login" method="POST">
+
+        <form action="/auth/login" method="POST" id="loginForm">
             <div class="form-group">
                 <label for="username">Username:</label>
-                <input type="text" id="username" name="username" required>
+                <input 
+                    type="text" 
+                    id="username" 
+                    name="username" 
+                    value="<%= typeof username !== 'undefined' ? username : '' %>"
+                    required 
+                    autocomplete="username"
+                    pattern="[a-zA-Z0-9_]{3,50}"
+                    title="Username must be 3-50 characters long and contain only letters, numbers, and underscores"
+                >
             </div>
             <div class="form-group">
                 <label for="password">Password:</label>
-                <input type="password" id="password" name="password" required>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    required 
+                    autocomplete="current-password"
+                    minlength="8"
+                >
             </div>
-            <button type="submit">Login</button>
+            <button type="submit" class="login-button">Login</button>
         </form>
-        <p>Don't have an account? <a href="/register">Register here</a></p>
+
+        <div class="security-notice">
+            <strong>Security Notice:</strong> This application implements comprehensive security measures including account lockout, audit logging, and secure session management.
+        </div>
+
+        <div class="password-requirements">
+            <h4>Password Requirements:</h4>
+            <ul>
+                <li>Minimum 8 characters</li>
+                <li>At least one uppercase letter</li>
+                <li>At least one lowercase letter</li>
+                <li>At least one number</li>
+                <li>At least one special character (@$!%*?&)</li>
+            </ul>
+        </div>
     </div>
+
+    <script>
+        // Client-side validation
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // Username validation
+            if (!/^[a-zA-Z0-9_]{3,50}$/.test(username)) {
+                e.preventDefault();
+                alert('Username must be 3-50 characters long and contain only letters, numbers, and underscores.');
+                return false;
+            }
+            
+            // Password validation
+            if (password.length < 8) {
+                e.preventDefault();
+                alert('Password must be at least 8 characters long.');
+                return false;
+            }
+        });
+
+        // Clear form on page load if there was an error
+        if (document.querySelector('.error-message')) {
+            document.getElementById('password').value = '';
+        }
+    </script>
 </body>
 </html>
