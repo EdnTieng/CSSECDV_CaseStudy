@@ -50,9 +50,13 @@ class UserController {
                 .select('-password -passwordHistory')
                 .sort({ createdAt: -1 });
 
-            res.render('users/list', {
+            // Render the same view as admin for consistency
+            res.render('admin/users', {
                 users,
-                user: req.user
+                user: req.user,
+                currentPage: 1,
+                totalPages: 1,
+                totalUsers: users.length
             });
         } catch (err) {
             console.error('Get users by role error:', err);
@@ -213,13 +217,17 @@ class UserController {
     async deleteUser(req, res) {
         try {
             const userId = req.params.id;
+            console.log('Delete user request for ID:', userId, 'by user:', req.user.username);
 
             const userToDelete = await User.findById(userId);
             if (!userToDelete) {
+                console.log('User not found:', userId);
                 return res.status(404).json({
                     error: 'User not found.'
                 });
             }
+
+            console.log('Found user to delete:', userToDelete.username, 'role:', userToDelete.role);
 
             // Check permissions
             if (req.user.role === 'RoleA') {
@@ -240,6 +248,7 @@ class UserController {
             }
 
             await User.findByIdAndDelete(userId);
+            console.log('User deleted successfully:', userToDelete.username);
 
             await logSecurityEvent(req, 'USER_DELETED', `User deleted: ${userToDelete.username}`, 'HIGH');
 
@@ -251,7 +260,7 @@ class UserController {
             console.error('Delete user error:', err);
             await logSecurityEvent(req, 'USER_DELETED', 'User deletion system error', 'HIGH');
             res.status(500).json({
-                error: 'An error occurred while deleting the user.'
+                error: 'An error occurred while deleting the user: ' + err.message
             });
         }
     }

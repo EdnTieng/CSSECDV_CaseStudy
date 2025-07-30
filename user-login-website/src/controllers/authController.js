@@ -109,7 +109,16 @@ class AuthController {
                 });
             }
 
-            const { currentPassword, newPassword } = req.body;
+            const { currentPassword, newPassword, confirmPassword } = req.body;
+            
+            // Check if passwords match
+            if (newPassword !== confirmPassword) {
+                return res.render('changePassword', { 
+                    error: 'New password and confirm password do not match.',
+                    user: req.user 
+                });
+            }
+
             const user = await User.findById(req.user._id);
 
             const isCurrentPasswordValid = await user.comparePassword(currentPassword);
@@ -132,7 +141,10 @@ class AuthController {
             user.password = newPassword;
             await user.save();
 
-            await logSecurityEvent(req, 'PASSWORD_CHANGED', `Password changed for user: ${user.username}`, 'LOW');
+            // Reset re-auth flag after successful password change
+            req.session.reAuthVerified = false;
+
+            await logSecurityEvent(req, 'PASSWORD_CHANGE', `Password changed for user: ${user.username}`, 'LOW');
             res.render('changePassword', { 
                 success: 'Password changed successfully.',
                 user: req.user 
@@ -172,7 +184,11 @@ class AuthController {
 
             req.session.reAuthVerified = true;
             await logSecurityEvent(req, 'REAUTH_SUCCESS', `User re-authenticated: ${user.username}`, 'LOW');
-            res.redirect(returnUrl || '/dashboard');
+            
+            // Ensure we redirect to the change password page, not dashboard
+            const redirectUrl = returnUrl || '/auth/change-password';
+            console.log('Re-auth successful, redirecting to:', redirectUrl);
+            res.redirect(redirectUrl);
         } catch (err) {
             console.error('Re-authentication error:', err);
             await logSecurityEvent(req, 'CRITICAL_OPERATION', `Re-authentication error: ${err.message}`, 'HIGH');

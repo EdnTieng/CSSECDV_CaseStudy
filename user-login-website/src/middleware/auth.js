@@ -70,8 +70,7 @@ const requireReAuth = async (req, res, next) => {
             });
         }
         
-        // Reset re-auth flag after use
-        req.session.reAuthVerified = false;
+        // Don't reset the flag immediately - let the operation complete first
         next();
     } catch (error) {
         res.status(500).render('error', { 

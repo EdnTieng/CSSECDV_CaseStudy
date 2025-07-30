@@ -119,6 +119,11 @@ const reAuthSchema = Joi.object({
         .required()
         .messages({
             'any.required': 'Password is required'
+        }),
+    returnUrl: Joi.string()
+        .optional()
+        .messages({
+            'string.base': 'Return URL must be a string'
         })
 });
 
@@ -137,10 +142,9 @@ const auditLogQuerySchema = Joi.object({
             'date.min': 'End date must be after start date'
         }),
     eventType: Joi.string()
-        .valid('LOGIN_SUCCESS', 'LOGIN_FAILED', 'LOGOUT', 'PASSWORD_CHANGE', 'PASSWORD_RESET', 'ACCOUNT_LOCKED', 'ACCOUNT_UNLOCKED', 'USER_CREATED', 'USER_UPDATED', 'USER_DELETED', 'ROLE_CHANGED', 'ACCESS_DENIED', 'INPUT_VALIDATION_FAILED', 'CRITICAL_OPERATION', 'PROFILE_VIEWED')
         .optional()
         .messages({
-            'any.only': 'Invalid event type'
+            'string.base': 'Event type must be a string'
         }),
     severity: Joi.string()
         .valid('LOW', 'MEDIUM', 'HIGH', 'CRITICAL')

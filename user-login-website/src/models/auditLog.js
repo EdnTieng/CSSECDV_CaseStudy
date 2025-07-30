@@ -40,7 +40,8 @@ const auditLogSchema = new mongoose.Schema({
             'ACCESS_DENIED',
             'INPUT_VALIDATION_FAILED',
             'CRITICAL_OPERATION',
-            'PROFILE_VIEWED'
+            'PROFILE_VIEWED',
+            'REAUTH_SUCCESS' // Added this event type
         ],
         required: true
     },
