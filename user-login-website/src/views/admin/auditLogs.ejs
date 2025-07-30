@@ -269,6 +269,12 @@
             border-radius: 5px;
             font-size: 0.9rem;
         }
+
+        .table td.details-cell {
+            max-width: 350px;
+            word-break: break-word;
+            white-space: pre-line;
+        }
     </style>
 </head>
 <body>
@@ -321,33 +327,38 @@
         </div>
 
         <div class="filters">
-            <div class="filter-row">
-                <div class="filter-group">
-                    <label for="eventType">Event Type</label>
-                    <select id="eventType">
-                        <option value="">All Events</option>
-                        <option value="LOGIN_SUCCESS">Successful Login</option>
-                        <option value="LOGIN_FAILED">Failed Login</option>
-                        <option value="ACCESS_DENIED">Access Denied</option>
-                        <option value="PASSWORD_CHANGE">Password Change</option>
-                        <option value="USER_CREATED">User Created</option>
-                        <option value="USER_DELETED">User Deleted</option>
-                    </select>
+            <form method="GET" action="/admin/audit-logs">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="eventType">Event Type</label>
+                        <select id="eventType" name="eventType">
+                            <option value="">All Events</option>
+                            <option value="LOGIN_SUCCESS" <%= filters.eventType === 'LOGIN_SUCCESS' ? 'selected' : '' %>>Successful Login</option>
+                            <option value="LOGIN_FAILED" <%= filters.eventType === 'LOGIN_FAILED' ? 'selected' : '' %>>Failed Login</option>
+                            <option value="ACCESS_DENIED" <%= filters.eventType === 'ACCESS_DENIED' ? 'selected' : '' %>>Access Denied</option>
+                            <option value="PASSWORD_CHANGE" <%= filters.eventType === 'PASSWORD_CHANGE' ? 'selected' : '' %>>Password Change</option>
+                            <option value="USER_CREATED" <%= filters.eventType === 'USER_CREATED' ? 'selected' : '' %>>User Created</option>
+                            <option value="USER_DELETED" <%= filters.eventType === 'USER_DELETED' ? 'selected' : '' %>>User Deleted</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="severity">Severity</label>
+                        <select id="severity" name="severity">
+                            <option value="">All Severities</option>
+                            <option value="HIGH" <%= filters.severity === 'HIGH' ? 'selected' : '' %>>High</option>
+                            <option value="MEDIUM" <%= filters.severity === 'MEDIUM' ? 'selected' : '' %>>Medium</option>
+                            <option value="LOW" <%= filters.severity === 'LOW' ? 'selected' : '' %>>Low</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" placeholder="Filter by username" value="<%= filters.username || '' %>">
+                    </div>
+                    <div class="filter-group">
+                        <button type="submit" class="btn btn-primary">Apply Filters</button>
+                    </div>
                 </div>
-                <div class="filter-group">
-                    <label for="severity">Severity</label>
-                    <select id="severity">
-                        <option value="">All Severities</option>
-                        <option value="HIGH">High</option>
-                        <option value="MEDIUM">Medium</option>
-                        <option value="LOW">Low</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" placeholder="Filter by username">
-                </div>
-            </div>
+            </form>
         </div>
 
         <div class="logs-table">
@@ -386,7 +397,7 @@
                                     </span>
                                 </td>
                                 <td><%= log.ipAddress %></td>
-                                <td><%= log.eventDetails %></td>
+                                <td class="details-cell"><%= log.eventDetails %></td>
                             </tr>
                         <% }); %>
                     </tbody>
@@ -398,35 +409,6 @@
     <script>
         function refreshLogs() {
             window.location.reload();
-        }
-
-        // Filter functionality
-        document.getElementById('eventType').addEventListener('change', filterLogs);
-        document.getElementById('severity').addEventListener('change', filterLogs);
-        document.getElementById('username').addEventListener('input', filterLogs);
-
-        function filterLogs() {
-            const eventType = document.getElementById('eventType').value;
-            const severity = document.getElementById('severity').value;
-            const username = document.getElementById('username').value.toLowerCase();
-
-            const rows = document.querySelectorAll('.table tbody tr');
-            
-            rows.forEach(row => {
-                const eventTypeCell = row.cells[2].textContent.trim();
-                const severityCell = row.cells[3].textContent.trim();
-                const usernameCell = row.cells[1].textContent.trim().toLowerCase();
-
-                const eventTypeMatch = !eventType || eventTypeCell.includes(eventType);
-                const severityMatch = !severity || severityCell.includes(severity);
-                const usernameMatch = !username || usernameCell.includes(username);
-
-                if (eventTypeMatch && severityMatch && usernameMatch) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
         }
     </script>
 </body>

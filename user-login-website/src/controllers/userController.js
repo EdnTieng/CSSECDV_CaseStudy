@@ -67,18 +67,29 @@ class UserController {
     // Create new user
     async createUser(req, res) {
         try {
-            // Validate input
-            const { error } = createUserSchema.validate(req.body);
+            // Remove confirmPassword before validation
+            const { confirmPassword, ...userData } = req.body;
+            const { error } = createUserSchema.validate(userData);
             if (error) {
                 await logSecurityEvent(req, 'INPUT_VALIDATION_FAILED', `User creation validation failed: ${error.details[0].message}`, 'MEDIUM');
                 return res.render('admin/createUser', {
                     error: 'Invalid input. Please check your data.',
                     user: req.user,
-                    formData: req.body
+                    formData: req.body,
+                    success: undefined
                 });
             }
 
-            const { username, email, password, role } = req.body;
+            const { username, email, password, role } = userData;
+
+            if (!password || !confirmPassword || password !== confirmPassword) {
+                return res.render('admin/createUser', {
+                    error: 'Passwords do not match.',
+                    user: req.user,
+                    formData: req.body,
+                    success: undefined
+                });
+            }
 
             // Check role permissions
             if (req.user.role === 'RoleA' && role !== 'RoleB') {
@@ -86,7 +97,8 @@ class UserController {
                 return res.render('admin/createUser', {
                     error: 'You can only create Role B users.',
                     user: req.user,
-                    formData: req.body
+                    formData: req.body,
+                    success: undefined
                 });
             }
 
@@ -99,7 +111,8 @@ class UserController {
                 return res.render('admin/createUser', {
                     error: 'Username or email already exists.',
                     user: req.user,
-                    formData: req.body
+                    formData: req.body,
+                    success: undefined
                 });
             }
 
@@ -116,14 +129,21 @@ class UserController {
 
             await logSecurityEvent(req, 'USER_CREATED', `User created: ${username} with role: ${role}`, 'MEDIUM');
 
-            res.redirect('/admin/users');
+            // Render the form with a success message and empty formData
+            res.render('admin/createUser', {
+                error: null,
+                user: req.user,
+                formData: {},
+                success: `User '${username}' created successfully.`
+            });
         } catch (err) {
             console.error('Create user error:', err);
             await logSecurityEvent(req, 'USER_CREATED', 'User creation system error', 'HIGH');
             res.render('admin/createUser', {
                 error: 'An error occurred while creating the user. Please try again.',
                 user: req.user,
-                formData: req.body
+                formData: req.body,
+                success: undefined
             });
         }
     }

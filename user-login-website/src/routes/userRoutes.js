@@ -8,7 +8,7 @@ const router = express.Router();
 // Administrator routes
 router.get('/users', requireAuth, requireAdministrator, userController.getAllUsers);
 router.get('/users/create', requireAuth, requireAdministrator, (req, res) => {
-    res.render('admin/createUser', { error: null, user: req.user, formData: {} });
+    res.render('admin/createUser', { error: null, user: req.user, formData: {}, success: undefined });
 });
 router.post('/users/create', 
     requireAuth,

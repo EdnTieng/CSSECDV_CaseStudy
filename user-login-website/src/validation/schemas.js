@@ -55,7 +55,8 @@ const createUserSchema = Joi.object({
         .messages({
             'any.only': 'Role must be Administrator, RoleA, or RoleB',
             'any.required': 'Role is required'
-        })
+        }),
+    confirmPassword: Joi.any().optional() // Allow confirmPassword in the body, but do not validate it
 });
 
 // User update validation schema
@@ -136,7 +137,7 @@ const auditLogQuerySchema = Joi.object({
             'date.min': 'End date must be after start date'
         }),
     eventType: Joi.string()
-        .valid('LOGIN_SUCCESS', 'LOGIN_FAILED', 'LOGOUT', 'PASSWORD_CHANGE', 'PASSWORD_RESET', 'ACCOUNT_LOCKED', 'ACCOUNT_UNLOCKED', 'USER_CREATED', 'USER_UPDATED', 'USER_DELETED', 'ROLE_CHANGED', 'ACCESS_DENIED', 'INPUT_VALIDATION_FAILED', 'CRITICAL_OPERATION')
+        .valid('LOGIN_SUCCESS', 'LOGIN_FAILED', 'LOGOUT', 'PASSWORD_CHANGE', 'PASSWORD_RESET', 'ACCOUNT_LOCKED', 'ACCOUNT_UNLOCKED', 'USER_CREATED', 'USER_UPDATED', 'USER_DELETED', 'ROLE_CHANGED', 'ACCESS_DENIED', 'INPUT_VALIDATION_FAILED', 'CRITICAL_OPERATION', 'PROFILE_VIEWED')
         .optional()
         .messages({
             'any.only': 'Invalid event type'

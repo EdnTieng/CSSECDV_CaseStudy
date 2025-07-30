@@ -39,7 +39,8 @@ const auditLogSchema = new mongoose.Schema({
             'ROLE_CHANGED',
             'ACCESS_DENIED',
             'INPUT_VALIDATION_FAILED',
-            'CRITICAL_OPERATION'
+            'CRITICAL_OPERATION',
+            'PROFILE_VIEWED'
         ],
         required: true
     },

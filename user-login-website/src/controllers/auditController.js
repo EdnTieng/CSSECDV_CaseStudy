@@ -52,7 +52,7 @@ class AuditController {
             const totalPages = Math.ceil(totalLogs / parseInt(limit));
 
             // Get summary statistics
-            const stats = await this.getAuditStats(query);
+            const stats = await AuditController.getAuditStats(query);
 
             res.render('admin/auditLogs', {
                 logs,
@@ -81,7 +81,7 @@ class AuditController {
     }
 
     // Get audit statistics
-    async getAuditStats(query = {}) {
+    static async getAuditStats(query = {}) {
         try {
             const stats = await AuditLog.aggregate([
                 { $match: query },
@@ -89,17 +89,14 @@ class AuditController {
                     $group: {
                         _id: null,
                         totalEvents: { $sum: 1 },
-                        criticalEvents: {
-                            $sum: { $cond: [{ $eq: ['$severity', 'CRITICAL'] }, 1, 0] }
+                        failedLogins: {
+                            $sum: { $cond: [{ $eq: ['$eventType', 'LOGIN_FAILED'] }, 1, 0] }
                         },
-                        highEvents: {
+                        accessViolations: {
+                            $sum: { $cond: [{ $eq: ['$eventType', 'ACCESS_DENIED'] }, 1, 0] }
+                        },
+                        highSeverity: {
                             $sum: { $cond: [{ $eq: ['$severity', 'HIGH'] }, 1, 0] }
-                        },
-                        mediumEvents: {
-                            $sum: { $cond: [{ $eq: ['$severity', 'MEDIUM'] }, 1, 0] }
-                        },
-                        lowEvents: {
-                            $sum: { $cond: [{ $eq: ['$severity', 'LOW'] }, 1, 0] }
                         }
                     }
                 }
@@ -107,19 +104,17 @@ class AuditController {
 
             return stats[0] || {
                 totalEvents: 0,
-                criticalEvents: 0,
-                highEvents: 0,
-                mediumEvents: 0,
-                lowEvents: 0
+                failedLogins: 0,
+                accessViolations: 0,
+                highSeverity: 0
             };
         } catch (err) {
             console.error('Get audit stats error:', err);
             return {
                 totalEvents: 0,
-                criticalEvents: 0,
-                highEvents: 0,
-                mediumEvents: 0,
-                lowEvents: 0
+                failedLogins: 0,
+                accessViolations: 0,
+                highSeverity: 0
             };
         }
     }
@@ -167,8 +162,8 @@ class AuditController {
                 .sort({ timestamp: -1 })
                 .populate('userId', 'username email role');
 
-            // Convert to CSV format
-            const csvData = this.convertToCSV(logs);
+            // Convert to CSV format (static method)
+            const csvData = AuditController.convertToCSV(logs);
 
             res.setHeader('Content-Type', 'text/csv');
             res.setHeader('Content-Disposition', `attachment; filename=audit-logs-${new Date().toISOString().split('T')[0]}.csv`);
@@ -187,7 +182,7 @@ class AuditController {
     }
 
     // Convert audit logs to CSV format
-    convertToCSV(logs) {
+    static convertToCSV(logs) {
         const headers = [
             'Timestamp',
             'Username',
