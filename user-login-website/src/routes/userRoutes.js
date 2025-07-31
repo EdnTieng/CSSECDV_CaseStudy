@@ -23,6 +23,6 @@ router.get('/users/:id', requireAuth, requireRoleA, userController.getUserDetail
 
 // API routes for user management
 router.put('/api/users/:id', requireAuth, requireRoleA, userController.updateUser);
-router.delete('/api/users/:id', requireAuth, requireAdministrator, userController.deleteUser);
+router.delete('/api/users/:id', requireAuth, requireRoleA, userController.deleteUser);
 
-module.exports = router; 
+module.exports = router;
