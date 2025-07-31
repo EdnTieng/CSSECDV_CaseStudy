@@ -299,7 +299,8 @@
                                     <div class="action-buttons">
                                         <a href="/admin/users/<%= userItem._id %>" class="btn btn-primary">View</a>
                                         <% if (userItem._id.toString() !== user._id.toString()) { %>
-                                            <button class="btn btn-danger" onclick="deleteUser('<%= userItem._id %>')">Delete</button>
+                                            <button class="btn btn-danger delete-user-btn" data-user-id="<%= userItem._id %>">Delete</button>
+
                                         <% } %>
                                     </div>
                                 </td>
@@ -311,35 +312,7 @@
         </div>
     </main>
 
-    <script>
-        function deleteUser(userId) {
-            console.log('Delete button clicked for user:', userId);
-            if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-                console.log('Proceeding with delete for user:', userId);
-                fetch(`/admin/api/users/${userId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => {
-                    console.log('Delete response status:', response.status);
-                    if (response.ok) {
-                        console.log('User deleted successfully');
-                        window.location.reload();
-                    } else {
-                        return response.json().then(data => {
-                            console.error('Delete failed:', data);
-                            alert('Failed to delete user: ' + (data.error || 'Unknown error'));
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Delete error:', error);
-                    alert('An error occurred while deleting the user: ' + error.message);
-                });
-            }
-        }
-    </script>
+    <script src="/js/deleteUser.js" defer></script>
+
 </body>
 </html> 

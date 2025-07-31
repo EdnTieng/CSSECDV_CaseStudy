@@ -6,10 +6,10 @@ const requireAuth = async (req, res, next) => {
     try {
         if (!req.session.userId) {
             await logSecurityEvent(req, 'ACCESS_DENIED', 'Unauthenticated access attempt', 'HIGH');
-            return res.status(401).render('error', { 
-                error: 'Authentication required',
-                message: 'Please log in to access this resource'
-            });
+            if (wantsJson(req)) {
+                return res.status(401).json({ error: 'Authentication required' });
+            }
+            return res.status(401).render('error', { error: 'Authentication required', message: 'Please log in...' });
         }
 
         const user = await User.findById(req.session.userId).select('-password');
@@ -165,6 +165,10 @@ const logSecurityEvent = async (req, eventType, details, severity = 'LOW') => {
     } catch (error) {
         console.error('Failed to log security event:', error);
     }
+};
+
+const wantsJson = (req) => {
+  return req.originalUrl.startsWith('/api/') || req.get('Accept')?.includes('application/json') || req.xhr;
 };
 
 module.exports = {

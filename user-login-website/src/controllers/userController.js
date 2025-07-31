@@ -1,6 +1,7 @@
 const User = require('../models/user');
 const { logSecurityEvent } = require('../middleware/auth');
 const { createUserSchema, updateUserSchema } = require('../validation/schemas');
+const mongoose = require('mongoose');
 
 class UserController {
     // Get all users (Administrators only)
@@ -246,7 +247,9 @@ class UserController {
                     error: 'You cannot delete your own account.'
                 });
             }
-
+            else{
+                console.log('User deletion request is valid for user:', userToDelete.username);
+            }
             await User.findByIdAndDelete(userId);
             console.log('User deleted successfully:', userToDelete.username);
 

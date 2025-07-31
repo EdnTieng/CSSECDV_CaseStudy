@@ -17,6 +17,8 @@ const { logSecurityEvent } = require('./middleware/auth');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(express.static(path.join(__dirname, "..", "public")));
+
 // Security middleware
 app.use(helmet({
     contentSecurityPolicy: {
