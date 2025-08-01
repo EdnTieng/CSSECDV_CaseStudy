@@ -87,41 +87,48 @@ const userSchema = new mongoose.Schema({
 // Password complexity validation
 userSchema.pre('save', async function(next) {
     if (this.isModified('password')) {
-        // Password complexity requirements
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-        
-        if (!passwordRegex.test(this.password)) {
-            const error = new Error('Password must contain at least 8 characters, including uppercase, lowercase, number, and special character');
-            return next(error);
-        }
+        // Only check complexity and history if password is not already hashed
+        const isHashed = /^\$2[aby]\$/.test(this.password);
+        if (!isHashed) {
+            // Password complexity requirements
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+            if (!passwordRegex.test(this.password)) {
+                return next(new Error('Password must contain at least 8 characters, including uppercase, lowercase, number, and special character'));
+            }
 
-        // Check password history (prevent reuse of last 5 passwords)
-        if (this.passwordHistory.length > 0) {
-            for (let i = 0; i < Math.min(5, this.passwordHistory.length); i++) {
-                const isMatch = await bcrypt.compare(this.password, this.passwordHistory[i].password);
-                if (isMatch) {
-                    const error = new Error('Password cannot be the same as your last 5 passwords');
-                    return next(error);
+            // Check password history (prevent reuse of last 5 passwords)
+            if (this.passwordHistory && this.passwordHistory.length > 0) {
+                // Only check the last 5 passwords
+                const last5 = this.passwordHistory.slice(-5);
+                for (let i = 0; i < last5.length; i++) {
+                    const isMatch = await bcrypt.compare(this.password, last5[i].password);
+                    if (isMatch) {
+                        return next(new Error('Password cannot be the same as your last 5 passwords'));
+                    }
                 }
             }
+
+            // Hash password
+            const saltRounds = 12;
+            const hashed = await bcrypt.hash(this.password, saltRounds);
+
+            // Add current password to history before updating
+            if (this.isNew === false && this.isModified('password')) {
+                // Only push if not a new user and password is being changed
+                this.passwordHistory = this.passwordHistory || [];
+                this.passwordHistory.push({
+                    password: hashed,
+                    changedAt: new Date()
+                });
+                // Keep only last 10 passwords in history
+                if (this.passwordHistory.length > 10) {
+                    this.passwordHistory = this.passwordHistory.slice(-10);
+                }
+            }
+
+            this.password = hashed;
+            this.passwordChangedAt = new Date();
         }
-
-        // Hash password
-        const saltRounds = 12;
-        this.password = await bcrypt.hash(this.password, saltRounds);
-        
-        // Add to password history
-        this.passwordHistory.push({
-            password: this.password,
-            changedAt: new Date()
-        });
-
-        // Keep only last 10 passwords in history
-        if (this.passwordHistory.length > 10) {
-            this.passwordHistory = this.passwordHistory.slice(-10);
-        }
-
-        this.passwordChangedAt = new Date();
     }
     next();
 });
