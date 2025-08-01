@@ -78,6 +78,15 @@
             border-left: 4px solid #c33;
         }
 
+        .success-message {
+            background: #efe;
+            color: #3c3;
+            padding: 0.75rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #3c3;
+        }
+
         .login-button {
             width: 100%;
             padding: 0.75rem;
@@ -149,6 +158,12 @@
         <% if (typeof error !== 'undefined' && error) { %>
             <div class="error-message">
                 <strong>Login Failed:</strong> <%= error %>
+            </div>
+        <% } %>
+
+        <% if (typeof message !== 'undefined' && message) { %>
+            <div class="success-message">
+                <strong>Success:</strong> <%= message %>
             </div>
         <% } %>
 

@@ -240,12 +240,16 @@ class UserController {
                 }
             }
 
-            // Prevent self-deletion
+            // Allow self-deletion for Role B users, prevent for others
             if (userId === req.user._id.toString()) {
-                await logSecurityEvent(req, 'ACCESS_DENIED', 'User attempted to delete their own account', 'HIGH');
-                return res.status(403).json({
-                    error: 'You cannot delete your own account.'
-                });
+                if (req.user.role !== 'RoleB') {
+                    await logSecurityEvent(req, 'ACCESS_DENIED', `${req.user.role} user attempted to delete their own account`, 'HIGH');
+                    return res.status(403).json({
+                        error: 'You cannot delete your own account.'
+                    });
+                }
+                // Role B users can delete their own account
+                console.log('Role B user self-deletion request:', userToDelete.username);
             }
             else{
                 console.log('User deletion request is valid for user:', userToDelete.username);
@@ -264,6 +268,85 @@ class UserController {
             await logSecurityEvent(req, 'USER_DELETED', 'User deletion system error', 'HIGH');
             res.status(500).json({
                 error: 'An error occurred while deleting the user: ' + err.message
+            });
+        }
+    }
+
+    // Self-delete account (for Role B users)
+    async deleteOwnAccount(req, res) {
+        try {
+            const userId = req.user._id;
+
+            // Only Role B users can delete their own account
+            if (req.user.role !== 'RoleB') {
+                await logSecurityEvent(req, 'ACCESS_DENIED', `${req.user.role} user attempted to delete their own account`, 'HIGH');
+                return res.status(403).render('error', {
+                    error: 'Access Denied',
+                    message: 'Only Role B users can delete their own account.'
+                });
+            }
+
+            // Check if confirmation was provided
+            if (!req.body.confirmation || req.body.confirmation !== 'DELETE') {
+                return res.status(400).render('users/deleteAccount', {
+                    user: req.user,
+                    error: 'Please type "DELETE" to confirm account deletion.'
+                });
+            }
+
+            // Delete the user account
+            const result = await User.findByIdAndDelete(userId);
+            
+            if (!result) {
+                return res.status(404).render('error', {
+                    error: 'User Not Found',
+                    message: 'User account not found.'
+                });
+            }
+
+            await logSecurityEvent(req, 'USER_DELETED', `User self-deleted: ${req.user.username}`, 'HIGH');
+
+            // Destroy the session
+            req.session.destroy((err) => {
+                if (err) {
+                    console.error('Error destroying session:', err);
+                }
+                
+                // Redirect to login page with success message
+                res.redirect('/auth/login?message=Account deleted successfully');
+            });
+
+        } catch (err) {
+            console.error('Self-delete error:', err);
+            await logSecurityEvent(req, 'USER_DELETED', 'User self-deletion system error', 'HIGH');
+            res.status(500).render('error', {
+                error: 'Server Error',
+                message: 'An error occurred while deleting your account: ' + err.message
+            });
+        }
+    }
+
+    // Show delete account confirmation page
+    async showDeleteAccountConfirmation(req, res) {
+        try {
+            // Only Role B users can access this page
+            if (req.user.role !== 'RoleB') {
+                await logSecurityEvent(req, 'ACCESS_DENIED', `${req.user.role} user attempted to access delete account page`, 'HIGH');
+                return res.status(403).render('error', {
+                    error: 'Access Denied',
+                    message: 'Only Role B users can delete their own account.'
+                });
+            }
+
+            res.render('users/deleteAccount', {
+                user: req.user,
+                error: null
+            });
+        } catch (err) {
+            console.error('Show delete account confirmation error:', err);
+            res.status(500).render('error', {
+                error: 'Server Error',
+                message: 'An error occurred while loading the page.'
             });
         }
     }

@@ -28,6 +28,11 @@ router.post('/users/manage/create',
     validateInput(createUserSchema),
     userController.createUser
 );
+
+// Self-deletion routes (for Role B users) - Must come before /users/:id
+router.get('/delete-account', requireAuth, userController.showDeleteAccountConfirmation);
+router.post('/delete-account', requireAuth, userController.deleteOwnAccount);
+
 router.get('/users/:id', requireAuth, requireRoleA, userController.getUserDetails);
 
 // API routes for user management

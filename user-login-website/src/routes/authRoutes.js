@@ -10,7 +10,11 @@ router.get('/login', (req, res) => {
     if (req.session.userId) {
         return res.redirect('/dashboard');
     }
-    res.render('login', { error: null, username: '' });
+    res.render('login', { 
+        error: null, 
+        username: '',
+        message: req.query.message || null
+    });
 });
 
 router.post('/login', 
