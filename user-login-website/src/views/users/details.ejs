@@ -68,7 +68,7 @@
             <label>Last Login:</label>
             <div class="value"><%= user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : 'Never' %></div>
         </div>
-        <a href="/admin/users" class="back-link">Back to User Management</a>
+        <a href="<%= currentUser.role === 'Administrator' ? '/admin/users' : '/admin/users/manage' %>" class="back-link">Back to User Management</a>
     </div>
 </body>
 </html> 

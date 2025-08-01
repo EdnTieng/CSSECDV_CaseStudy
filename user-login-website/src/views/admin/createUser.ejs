@@ -227,8 +227,10 @@
             <nav>
                 <ul class="nav-menu">
                     <li><a href="/dashboard">Dashboard</a></li>
-                    <li><a href="/admin/users">User Management</a></li>
-                    <li><a href="/admin/audit-logs">Audit Logs</a></li>
+                    <li><a href="<%= user.role === 'Administrator' ? '/admin/users' : '/admin/users/manage' %>">User Management</a></li>
+                    <% if (user.role === 'Administrator') { %>
+                        <li><a href="/admin/audit-logs">Audit Logs</a></li>
+                    <% } %>
                     <li><a href="/auth/logout" class="logout-button">Logout</a></li>
                 </ul>
             </nav>
@@ -254,7 +256,7 @@
                 </div>
             <% } %>
 
-            <form method="POST" action="/admin/users/create">
+            <form method="POST" action="<%= user.role === 'Administrator' ? '/admin/users/create' : '/admin/users/manage/create' %>">
                 <div class="form-row">
                     <div class="form-group">
                         <label for="username">Username *</label>
@@ -291,15 +293,17 @@
                     <label for="role">User Role *</label>
                     <select id="role" name="role" required>
                         <option value="">Select a role</option>
-                        <option value="Administrator" <%= formData.role === 'Administrator' ? 'selected' : '' %>>Administrator</option>
-                        <option value="RoleA" <%= formData.role === 'RoleA' ? 'selected' : '' %>>Role A (Manager)</option>
+                        <% if (user.role === 'Administrator') { %>
+                            <option value="Administrator" <%= formData.role === 'Administrator' ? 'selected' : '' %>>Administrator</option>
+                            <option value="RoleA" <%= formData.role === 'RoleA' ? 'selected' : '' %>>Role A (Manager)</option>
+                        <% } %>
                         <option value="RoleB" <%= formData.role === 'RoleB' ? 'selected' : '' %>>Role B (User)</option>
                     </select>
                 </div>
 
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">Create User</button>
-                    <a href="/admin/users" class="btn btn-secondary">Cancel</a>
+                    <a href="<%= user.role === 'Administrator' ? '/admin/users' : '/admin/users/manage' %>" class="btn btn-secondary">Cancel</a>
                 </div>
             </form>
         </div>

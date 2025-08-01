@@ -19,6 +19,15 @@ router.post('/users/create',
 
 // Role A routes (can manage Role B users)
 router.get('/users/manage', requireAuth, requireRoleA, userController.getUsersByRole);
+router.get('/users/manage/create', requireAuth, requireRoleA, (req, res) => {
+    res.render('admin/createUser', { error: null, user: req.user, formData: {}, success: undefined });
+});
+router.post('/users/manage/create', 
+    requireAuth,
+    requireRoleA,
+    validateInput(createUserSchema),
+    userController.createUser
+);
 router.get('/users/:id', requireAuth, requireRoleA, userController.getUserDetails);
 
 // API routes for user management

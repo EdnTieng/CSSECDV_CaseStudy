@@ -232,8 +232,10 @@
             <nav>
                 <ul class="nav-menu">
                     <li><a href="/dashboard">Dashboard</a></li>
-                    <li><a href="/admin/users">User Management</a></li>
-                    <li><a href="/admin/audit-logs">Audit Logs</a></li>
+                    <li><a href="<%= user.role === 'Administrator' ? '/admin/users' : '/admin/users/manage' %>">User Management</a></li>
+                    <% if (user.role === 'Administrator') { %>
+                        <li><a href="/admin/audit-logs">Audit Logs</a></li>
+                    <% } %>
                     <li><a href="/auth/logout" class="logout-button">Logout</a></li>
                 </ul>
             </nav>
@@ -245,7 +247,7 @@
             <h2>System Users</h2>
             <p>Manage all users in the system. You can view user details, create new users, and manage user accounts.</p>
             <div class="action-buttons">
-                <a href="/admin/users/create" class="btn btn-primary">Create New User</a>
+                <a href="<%= user.role === 'Administrator' ? '/admin/users/create' : '/admin/users/manage/create' %>" class="btn btn-primary">Create New User</a>
             </div>
         </div>
 
