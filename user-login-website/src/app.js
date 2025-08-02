@@ -93,6 +93,8 @@ app.use('/auth', authRoutes);
 app.use('/admin', userRoutes);
 app.use('/admin', auditRoutes);
 
+
+
 // Public routes
 app.get('/', (req, res) => {
     if (req.session.userId) {

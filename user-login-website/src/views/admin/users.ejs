@@ -90,19 +90,21 @@
 
         .action-buttons {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.4rem;
             flex-wrap: nowrap;
+            align-items: center;
         }
 
         .btn {
             display: inline-block;
-            padding: 0.75rem 1.5rem;
+            padding: 0.6rem 1.2rem;
             text-decoration: none;
             border-radius: 5px;
             font-weight: 500;
             transition: all 0.3s ease;
             border: none;
             cursor: pointer;
+            font-size: 0.85rem;
         }
 
         .btn-primary {
@@ -122,6 +124,33 @@
 
         .btn-danger:hover {
             background: #c82333;
+        }
+
+        .role-select {
+            padding: 0.4rem 0.6rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: white;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+            min-width: 120px;
+            max-width: 140px;
+        }
+
+        .role-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .role-select:hover {
+            border-color: #667eea;
+        }
+
+        .role-select:disabled {
+            background: #f8f9fa;
+            cursor: not-allowed;
+            opacity: 0.6;
         }
 
         .users-table {
@@ -153,10 +182,10 @@
             text-align: left;
             border-bottom: 1px solid #dee2e6;
         }
-        .table th.actions-cell, .table td.actions-cell {
-            min-width: 180px;
-            white-space: nowrap;
-        }
+                 .table th.actions-cell, .table td.actions-cell {
+             min-width: 550px;
+             white-space: nowrap;
+         }
 
         .table th {
             background: #f8f9fa;
@@ -246,6 +275,19 @@
         <div class="page-header">
             <h2>System Users</h2>
             <p>Manage all users in the system. You can view user details, create new users, and manage user accounts.</p>
+            
+            <% if (typeof success !== 'undefined' && success) { %>
+                <div style="background: #d4edda; color: #155724; padding: 1rem; border-radius: 5px; margin-bottom: 1rem; border: 1px solid #c3e6cb;">
+                    ✅ <%= success %>
+                </div>
+            <% } %>
+            
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div style="background: #f8d7da; color: #721c24; padding: 1rem; border-radius: 5px; margin-bottom: 1rem; border: 1px solid #f5c6cb;">
+                    ❌ <%= error %>
+                </div>
+            <% } %>
+            
             <div class="action-buttons">
                 <a href="<%= user.role === 'Administrator' ? '/admin/users/create' : '/admin/users/manage/create' %>" class="btn btn-primary">Create New User</a>
             </div>
@@ -300,9 +342,11 @@
                                 <td class="actions-cell">
                                     <div class="action-buttons">
                                         <a href="/admin/users/<%= userItem._id %>" class="btn btn-primary">View</a>
+                                                                                 <% if (user.role === 'Administrator' && userItem._id.toString() !== user._id.toString()) { %>
+                                             <a href="/admin/users/<%= userItem._id %>/change-role" class="btn btn-primary" style="font-size: 0.7rem; padding: 0.3rem 0.6rem;">Change Role</a>
+                                         <% } %>
                                         <% if (userItem._id.toString() !== user._id.toString()) { %>
                                             <button class="btn btn-danger delete-user-btn" data-user-id="<%= userItem._id %>">Delete</button>
-
                                         <% } %>
                                     </div>
                                 </td>
@@ -314,7 +358,7 @@
         </div>
     </main>
 
-    <script src="/js/deleteUser.js" defer></script>
+            <script src="/js/deleteUser.js" defer></script>
 
 </body>
 </html> 

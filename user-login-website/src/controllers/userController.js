@@ -25,7 +25,9 @@ class UserController {
                 currentPage: page,
                 totalPages,
                 totalUsers,
-                user: req.user
+                user: req.user,
+                success: req.query.success,
+                error: req.query.error
             });
         } catch (err) {
             console.error('Get all users error:', err);
@@ -57,7 +59,9 @@ class UserController {
                 user: req.user,
                 currentPage: 1,
                 totalPages: 1,
-                totalUsers: users.length
+                totalUsers: users.length,
+                success: req.query.success,
+                error: req.query.error
             });
         } catch (err) {
             console.error('Get users by role error:', err);
@@ -69,13 +73,9 @@ class UserController {
         }
     }
 
-    // =================================================================
-    // START: MODIFIED createUser METHOD
-    // =================================================================
+    // Create user
     async createUser(req, res) {
         try {
-            // Note: You may need to update your createUserSchema in validation/schemas.js 
-            // to include the new security fields if you want server-side validation for them.
             const { error } = createUserSchema.validate(req.body);
             if (error) {
                 await logSecurityEvent(req, 'INPUT_VALIDATION_FAILED', `User creation validation failed: ${error.details[0].message}`, 'MEDIUM');
@@ -87,7 +87,6 @@ class UserController {
                 });
             }
 
-            // Destructure all fields from the request body, including the new security ones.
             const { username, email, password, confirmPassword, role, securityQuestion, securityAnswer } = req.body;
 
             if (!password || !confirmPassword || password !== confirmPassword) {
@@ -99,7 +98,6 @@ class UserController {
                 });
             }
 
-            // Add validation to ensure security fields are provided.
             if (!securityQuestion || !securityAnswer) {
                 return res.render('admin/createUser', {
                     error: 'Security question and answer are required for account recovery.',
@@ -134,14 +132,14 @@ class UserController {
                 });
             }
 
-            // Create user object, now including the securityQuestion and securityAnswer.
+            // Create user object
             const newUser = new User({
                 username,
                 email,
                 password,
                 role,
-                securityQuestion,   // Added
-                securityAnswer,     // Added
+                securityQuestion,
+                securityAnswer,
                 createdBy: req.user._id
             });
 
@@ -149,7 +147,6 @@ class UserController {
 
             await logSecurityEvent(req, 'USER_CREATED', `User created: ${username} with role: ${role}`, 'MEDIUM');
 
-            // Render the form with a success message and empty formData
             res.render('admin/createUser', {
                 error: null,
                 user: req.user,
@@ -159,7 +156,6 @@ class UserController {
         } catch (err) {
             console.error('Create user error:', err);
 
-            // Add specific error handling for password complexity validation from the User model.
             if (err.message.includes('Password must contain')) {
                 return res.render('admin/createUser', {
                     error: err.message,
@@ -178,9 +174,6 @@ class UserController {
             });
         }
     }
-    // =================================================================
-    // END: MODIFIED createUser METHOD
-    // =================================================================
 
     // Update user
     async updateUser(req, res) {
@@ -196,6 +189,7 @@ class UserController {
             }
 
             const userToUpdate = await User.findById(userId);
+            
             if (!userToUpdate) {
                 return res.status(404).json({
                     error: 'User not found.'
@@ -220,15 +214,20 @@ class UserController {
 
             // Update user
             const updateData = { ...req.body };
-            delete updateData.password; // Password changes handled separately
-
+            delete updateData.password;
+            
             const updatedUser = await User.findByIdAndUpdate(
                 userId,
                 updateData,
                 { new: true, runValidators: true }
             ).select('-password -passwordHistory');
 
-            await logSecurityEvent(req, 'USER_UPDATED', `User updated: ${updatedUser.username}`, 'MEDIUM');
+            // Log role changes specifically
+            if (req.body.role && req.body.role !== userToUpdate.role) {
+                await logSecurityEvent(req, 'ROLE_CHANGED', `Role changed for user ${updatedUser.username}: ${userToUpdate.role} → ${req.body.role}`, 'HIGH');
+            } else {
+                await logSecurityEvent(req, 'USER_UPDATED', `User updated: ${updatedUser.username}`, 'MEDIUM');
+            }
 
             res.json({
                 success: true,
@@ -243,21 +242,86 @@ class UserController {
         }
     }
 
-    // Delete user
-    async deleteUser(req, res) {
+    // Show change role page
+    async showChangeRolePage(req, res) {
         try {
             const userId = req.params.id;
-            console.log('Delete user request for ID:', userId, 'by user:', req.user.username);
+            const targetUser = await User.findById(userId).select('-password -passwordHistory');
+            
+            if (!targetUser) {
+                return res.status(404).render('error', {
+                    error: 'User Not Found',
+                    message: 'The specified user does not exist.'
+                });
+            }
+            
+            res.render('admin/changeRole', {
+                user: req.user,
+                targetUser: targetUser
+            });
+        } catch (err) {
+            console.error('Error showing change role page:', err);
+            res.status(500).render('error', {
+                error: 'Server Error',
+                message: 'An error occurred while loading the change role page.'
+            });
+        }
+    }
 
-            const userToDelete = await User.findById(userId);
-            if (!userToDelete) {
-                console.log('User not found:', userId);
+    // Update user role
+    async updateUserRole(req, res) {
+        try {
+            const userId = req.params.id;
+            const { role } = req.body;
+            
+            if (!role) {
+                return res.status(400).json({
+                    error: 'Role is required.'
+                });
+            }
+
+            const userToUpdate = await User.findById(userId);
+            
+            if (!userToUpdate) {
                 return res.status(404).json({
                     error: 'User not found.'
                 });
             }
 
-            console.log('Found user to delete:', userToDelete.username, 'role:', userToDelete.role);
+            // Update user role
+            const updateData = { role };
+            
+            const updatedUser = await User.findByIdAndUpdate(
+                userId,
+                updateData,
+                { new: true, runValidators: true }
+            ).select('-password -passwordHistory');
+
+            // Log role change
+            if (role !== userToUpdate.role) {
+                await logSecurityEvent(req, 'ROLE_CHANGED', `Role changed for user ${updatedUser.username}: ${userToUpdate.role} → ${role}`, 'HIGH');
+            }
+            
+            // Redirect back to user management page with success message
+            res.redirect('/admin/users?success=Role updated successfully');
+        } catch (err) {
+            console.error('Update user role error:', err);
+            await logSecurityEvent(req, 'USER_UPDATED', 'User role update system error', 'HIGH');
+            res.redirect('/admin/users?error=Failed to update role');
+        }
+    }
+
+    // Delete user
+    async deleteUser(req, res) {
+        try {
+            const userId = req.params.id;
+
+            const userToDelete = await User.findById(userId);
+            if (!userToDelete) {
+                return res.status(404).json({
+                    error: 'User not found.'
+                });
+            }
 
             // Check permissions
             if (req.user.role === 'RoleA') {
@@ -277,14 +341,9 @@ class UserController {
                         error: 'You cannot delete your own account.'
                     });
                 }
-                // Role B users can delete their own account
-                console.log('Role B user self-deletion request:', userToDelete.username);
             }
-            else{
-                console.log('User deletion request is valid for user:', userToDelete.username);
-            }
+            
             await User.findByIdAndDelete(userId);
-            console.log('User deleted successfully:', userToDelete.username);
 
             await logSecurityEvent(req, 'USER_DELETED', `User deleted: ${userToDelete.username}`, 'HIGH');
 

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Change User Role - Secure Web Application</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-role {
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 1rem;
+            list-style: none;
+        }
+
+        .nav-menu a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .nav-menu a:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .main-content {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .page-header {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .page-header h2 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .user-details {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .user-info-card {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-item {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-value {
+            color: #333;
+        }
+
+        .role-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .role-admin {
+            background: #dc3545;
+            color: white;
+        }
+
+        .role-rolea {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .role-roleb {
+            background: #28a745;
+            color: white;
+        }
+
+        .role-change-form {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            background: white;
+        }
+
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-right: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1.5rem;
+        }
+
+        .warning-box h4 {
+            margin-bottom: 0.5rem;
+            color: #856404;
+        }
+
+        .logout-button {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .logout-button:hover {
+            background: rgba(255,255,255,0.2);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>Change User Role</h1>
+            <div class="user-info">
+                <span>Welcome, <strong><%= user.username %></strong></span>
+                <span class="user-role"><%= user.role %></span>
+            </div>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="/dashboard">Dashboard</a></li>
+                    <li><a href="/admin/users">User Management</a></li>
+                    <% if (user.role === 'Administrator') { %>
+                        <li><a href="/admin/audit-logs">Audit Logs</a></li>
+                    <% } %>
+                    <li><a href="/auth/logout" class="logout-button">Logout</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h2>Change Role for <%= targetUser.username %></h2>
+            <p>You are about to change the role for user <strong><%= targetUser.username %></strong>. Please review the current information and select the new role.</p>
+        </div>
+
+        <div class="user-details">
+            <h3>Current User Information</h3>
+            <div class="user-info-card">
+                <div class="info-item">
+                    <div class="info-label">Username</div>
+                    <div class="info-value"><%= targetUser.username %></div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Email</div>
+                    <div class="info-value"><%= targetUser.email %></div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Current Role</div>
+                    <div class="info-value">
+                        <span class="role-badge role-<%= targetUser.role.toLowerCase() %>">
+                            <%= targetUser.role %>
+                        </span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Account Status</div>
+                    <div class="info-value">
+                        <span style="color: <%= targetUser.isActive ? '#28a745' : '#dc3545' %>; font-weight: 500;">
+                            <%= targetUser.isActive ? 'Active' : 'Inactive' %>
+                        </span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Created</div>
+                    <div class="info-value"><%= new Date(targetUser.createdAt).toLocaleDateString() %></div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Last Login</div>
+                    <div class="info-value">
+                        <% if (targetUser.lastLoginAt) { %>
+                            <%= new Date(targetUser.lastLoginAt).toLocaleString() %>
+                        <% } else { %>
+                            Never
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="role-change-form">
+            <h3>Select New Role</h3>
+            
+            <% if (targetUser.role === 'Administrator') { %>
+                <div class="warning-box">
+                    <h4>⚠️ Warning</h4>
+                    <p>You are about to change the role of an <strong>Administrator</strong>. This will affect their access to administrative functions.</p>
+                </div>
+            <% } %>
+
+            <form method="POST" action="/admin/users/<%= targetUser._id %>/role">
+                <div class="form-group">
+                    <label for="role">New Role:</label>
+                    <select name="role" id="role" required>
+                        <option value="">Select a role...</option>
+                        <option value="Administrator" <%= targetUser.role === 'Administrator' ? 'selected' : '' %>>Administrator</option>
+                        <option value="RoleA" <%= targetUser.role === 'RoleA' ? 'selected' : '' %>>Role A (Manager)</option>
+                        <option value="RoleB" <%= targetUser.role === 'RoleB' ? 'selected' : '' %>>Role B (User)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Update Role</button>
+                    <a href="/admin/users" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</body>
+</html> 

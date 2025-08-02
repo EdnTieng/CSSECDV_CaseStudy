@@ -13,6 +13,7 @@ const requireAuth = async (req, res, next) => {
         }
 
         const user = await User.findById(req.session.userId).select('-password');
+        
         if (!user || !user.isActive) {
             req.session.destroy();
             await logSecurityEvent(req, 'ACCESS_DENIED', 'Invalid or inactive user session', 'HIGH');
@@ -56,7 +57,25 @@ const requireRole = (allowedRoles) => {
 };
 
 // Specific role middleware
-const requireAdministrator = requireRole(['Administrator']);
+const requireAdministrator = (req, res, next) => {
+    if (!req.user) {
+        return res.status(401).render('error', { 
+            error: 'Authentication required',
+            message: 'Please log in to access this resource'
+        });
+    }
+
+    if (req.user.role !== 'Administrator') {
+        logSecurityEvent(req, 'ACCESS_DENIED', `Unauthorized access attempt to administrator resource. User role: ${req.user.role}`, 'HIGH');
+        return res.status(403).render('error', { 
+            error: 'Access Denied',
+            message: 'You do not have permission to access this resource'
+        });
+    }
+
+    next();
+};
+
 const requireRoleA = requireRole(['Administrator', 'RoleA']);
 const requireRoleB = requireRole(['Administrator', 'RoleA', 'RoleB']);
 
@@ -168,7 +187,20 @@ const logSecurityEvent = async (req, eventType, details, severity = 'LOW') => {
 };
 
 const wantsJson = (req) => {
-  return req.originalUrl.startsWith('/api/') || req.get('Accept')?.includes('application/json') || req.xhr;
+  const isApi = req.originalUrl.startsWith('/api/');
+  const acceptsJson = req.get('Accept')?.includes('application/json');
+  const isXhr = req.xhr;
+  
+  console.log('wantsJson check:', {
+    url: req.originalUrl,
+    isApi,
+    accept: req.get('Accept'),
+    acceptsJson,
+    isXhr,
+    result: isApi || acceptsJson || isXhr
+  });
+  
+  return isApi || acceptsJson || isXhr;
 };
 
 module.exports = {

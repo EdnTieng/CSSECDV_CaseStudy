@@ -176,12 +176,38 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
     }
 };
 
-// ... (rest of your userSchema.methods are unchanged)
-userSchema.methods.isAccountLocked = function() { /* ... */ };
-userSchema.methods.incrementFailedAttempts = function() { /* ... */ };
-userSchema.methods.resetFailedAttempts = function() { /* ... */ };
-userSchema.methods.canChangePassword = function() { /* ... */ };
-userSchema.methods.updateLastLogin = function(ipAddress) { /* ... */ };
+// Account lockout methods
+userSchema.methods.isAccountLocked = function() {
+    if (!this.accountLocked) return false;
+    if (!this.lockoutUntil) return false;
+    return new Date() < this.lockoutUntil;
+};
+
+userSchema.methods.incrementFailedAttempts = function() {
+    this.failedLoginAttempts += 1;
+    if (this.failedLoginAttempts >= 5) {
+        this.accountLocked = true;
+        this.lockoutUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    }
+};
+
+userSchema.methods.resetFailedAttempts = function() {
+    this.failedLoginAttempts = 0;
+    this.accountLocked = false;
+    this.lockoutUntil = null;
+};
+
+// Password change validation
+userSchema.methods.canChangePassword = function() {
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    return this.passwordChangedAt < oneDayAgo;
+};
+
+// Update last login information
+userSchema.methods.updateLastLogin = function(ipAddress) {
+    this.lastLoginAt = new Date();
+    this.lastLoginIp = ipAddress;
+};
 
 const User = mongoose.model('User', userSchema);
 

@@ -35,8 +35,19 @@ router.post('/delete-account', requireAuth, userController.deleteOwnAccount);
 
 router.get('/users/:id', requireAuth, requireRoleA, userController.getUserDetails);
 
+// Test route to verify API is working
+router.get('/api/test', (req, res) => {
+    console.log('Test API route hit!');
+    res.json({ success: true, message: 'API is working!' });
+});
+
 // API routes for user management
-router.put('/api/users/:id', requireAuth, requireRoleA, userController.updateUser);
+router.put('/api/users/:id', requireAuth, requireAdministrator, userController.updateUser);
+// Show change role page
+router.get('/users/:id/change-role', requireAuth, requireAdministrator, userController.showChangeRolePage);
+
+// Update user role
+router.post('/users/:id/role', requireAuth, requireAdministrator, userController.updateUserRole);
 router.delete('/api/users/:id', requireAuth, requireRoleA, userController.deleteUser);
 
 module.exports = router;
