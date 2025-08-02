@@ -79,12 +79,12 @@
         }
 
         .success-message {
-            background: #efe;
-            color: #3c3;
+            background: #e6ffed;
+            color: #006622;
             padding: 0.75rem;
             border-radius: 5px;
             margin-bottom: 1rem;
-            border-left: 4px solid #3c3;
+            border-left: 4px solid #009933;
         }
 
         .login-button {
@@ -106,6 +106,18 @@
 
         .login-button:active {
             transform: translateY(0);
+        }
+
+        .forgot-password-link {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .forgot-password-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
         }
 
         .security-notice {
@@ -194,6 +206,12 @@
             </div>
             <button type="submit" class="login-button">Login</button>
         </form>
+
+        <!-- START: ADDED FORGOT PASSWORD LINK -->
+        <div class="forgot-password-link">
+            <a href="/auth/forgot-password">Forgot Password?</a>
+        </div>
+        <!-- END: ADDED FORGOT PASSWORD LINK -->
 
         <div class="security-notice">
             <strong>Security Notice:</strong> This application implements comprehensive security measures including account lockout, audit logging, and secure session management.

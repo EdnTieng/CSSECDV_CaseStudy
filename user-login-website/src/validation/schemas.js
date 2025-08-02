@@ -56,7 +56,25 @@ const createUserSchema = Joi.object({
             'any.only': 'Role must be Administrator, RoleA, or RoleB',
             'any.required': 'Role is required'
         }),
-    confirmPassword: Joi.any().optional() // Allow confirmPassword in the body, but do not validate it
+    
+    // =======================================================
+    // START: ADDED CODE
+    // =======================================================
+    securityQuestion: Joi.string()
+        .required()
+        .messages({
+            'any.required': 'A security question is required.'
+        }),
+    securityAnswer: Joi.string()
+        .required()
+        .messages({
+            'any.required': 'A security answer is required.'
+        }),
+    // =======================================================
+    // END: ADDED CODE
+    // =======================================================
+
+    confirmPassword: Joi.any().optional() // Allow confirmPassword in the body, but do not validate it here
 });
 
 // User update validation schema
@@ -188,4 +206,4 @@ module.exports = {
     changePasswordSchema,
     reAuthSchema,
     auditLogQuerySchema
-}; 
+};

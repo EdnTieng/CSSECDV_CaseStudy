@@ -18,14 +18,16 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             padding: 2rem;
         }
-        h1 {
+        h1, h2 {
             color: #333;
             margin-bottom: 1rem;
         }
-        .profile-info {
+        .profile-info, .security-settings {
             margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid #eee;
         }
-        .profile-info label {
+        .profile-info label, .form-group label {
             font-weight: 600;
             color: #495057;
             display: block;
@@ -35,20 +37,37 @@
             margin-bottom: 1rem;
             color: #667eea;
         }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        .btn-primary {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 500;
+        }
         .back-link {
             display: inline-block;
             margin-top: 1rem;
             padding: 0.5rem 1.5rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #6c757d;
             color: white;
             border-radius: 5px;
             text-decoration: none;
             font-weight: 500;
-            transition: background 0.2s;
             margin-right: 1rem;
-        }
-        .back-link:hover {
-            background: #667eea;
         }
         .danger-zone {
             margin-top: 2rem;
@@ -78,11 +97,35 @@
         .delete-account-btn:hover {
             background: #c82333;
         }
+        .alert {
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>My Profile</h1>
+
+        <!-- Flash messages for success/error on security update -->
+        <% if (locals.error && error.length > 0) { %>
+            <div class="alert alert-error"><%= error %></div>
+        <% } %>
+        <% if (locals.success && success.length > 0) { %>
+            <div class="alert alert-success"><%= success %></div>
+        <% } %>
+
         <div class="profile-info">
             <label>Username:</label>
             <div class="value"><%= user.username %></div>
@@ -98,15 +141,59 @@
             <div class="value"><%= user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : 'Never' %></div>
         </div>
         
+        <!-- START: SECURITY SETTINGS SECTION -->
+        <div class="security-settings">
+            <h2>Security Settings</h2>
+            <p>Set or update your security question here. This is used for account recovery. You must provide your current password to make changes.</p>
+            
+            <% if (user.securityQuestion) { %>
+                <div style="margin-bottom: 1rem; background: #e8f4fd; padding: 1rem; border-radius: 5px;">
+                    <strong>Your current question is:</strong> <%= user.securityQuestion %>
+                </div>
+            <% } else { %>
+                <div class="alert alert-error">
+                    You have not set a security question. Please set one to enable account recovery.
+                </div>
+            <% } %>
+
+            <form action="/auth/update-security" method="POST">
+                <div class="form-group">
+                    <label for="securityQuestion">New Security Question</label>
+                    <select id="securityQuestion" name="securityQuestion" required>
+                        <option value="" disabled selected>-- Choose a new question --</option>
+                        <option value="What was your first pet's name?">What was your first pet's name?</option>
+                        <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
+                        <option value="What city were you born in?">What city were you born in?</option>
+                        <option value="What was the model of your first car?">What was the model of your first car?</option>
+                        <option value="What is the name of your favorite childhood friend?">What is the name of your favorite childhood friend?</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="securityAnswer">New Security Answer</label>
+                    <input type="password" id="securityAnswer" name="securityAnswer" required>
+                    <small>Answer is case-sensitive and will be hidden.</small>
+                </div>
+                <hr style="margin: 2rem 0;">
+                <div class="form-group">
+                    <label for="currentPassword">Confirm with Current Password</label>
+                    <input type="password" id="currentPassword" name="currentPassword" required placeholder="Enter password to save changes">
+                </div>
+                <button type="submit" class="btn-primary">Update Security Info</button>
+            </form>
+        </div>
+        <!-- END: SECURITY SETTINGS SECTION -->
+
         <% if (user.role === 'RoleB') { %>
             <div class="danger-zone">
                 <h3>⚠️ Danger Zone</h3>
                 <p>This action will permanently delete your account and all associated data. This action cannot be undone.</p>
-                <a href="/admin/delete-account" class="delete-account-btn">Delete My Account</a>
+                <a href="/users/delete-account" class="delete-account-btn">Delete My Account</a>
             </div>
         <% } %>
         
         <a href="/dashboard" class="back-link">Back to Dashboard</a>
+        <a href="/auth/change-password" class="back-link" style="background: #34a853;">Change Password</a>
+
     </div>
 </body>
-</html> 
+</html>

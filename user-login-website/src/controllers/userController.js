@@ -69,12 +69,14 @@ class UserController {
         }
     }
 
-    // Create new user
+    // =================================================================
+    // START: MODIFIED createUser METHOD
+    // =================================================================
     async createUser(req, res) {
         try {
-            // Remove confirmPassword before validation
-            const { confirmPassword, ...userData } = req.body;
-            const { error } = createUserSchema.validate(userData);
+            // Note: You may need to update your createUserSchema in validation/schemas.js 
+            // to include the new security fields if you want server-side validation for them.
+            const { error } = createUserSchema.validate(req.body);
             if (error) {
                 await logSecurityEvent(req, 'INPUT_VALIDATION_FAILED', `User creation validation failed: ${error.details[0].message}`, 'MEDIUM');
                 return res.render('admin/createUser', {
@@ -85,11 +87,22 @@ class UserController {
                 });
             }
 
-            const { username, email, password, role } = userData;
+            // Destructure all fields from the request body, including the new security ones.
+            const { username, email, password, confirmPassword, role, securityQuestion, securityAnswer } = req.body;
 
             if (!password || !confirmPassword || password !== confirmPassword) {
                 return res.render('admin/createUser', {
                     error: 'Passwords do not match.',
+                    user: req.user,
+                    formData: req.body,
+                    success: undefined
+                });
+            }
+
+            // Add validation to ensure security fields are provided.
+            if (!securityQuestion || !securityAnswer) {
+                return res.render('admin/createUser', {
+                    error: 'Security question and answer are required for account recovery.',
                     user: req.user,
                     formData: req.body,
                     success: undefined
@@ -121,12 +134,14 @@ class UserController {
                 });
             }
 
-            // Create user
+            // Create user object, now including the securityQuestion and securityAnswer.
             const newUser = new User({
                 username,
                 email,
                 password,
                 role,
+                securityQuestion,   // Added
+                securityAnswer,     // Added
                 createdBy: req.user._id
             });
 
@@ -143,6 +158,17 @@ class UserController {
             });
         } catch (err) {
             console.error('Create user error:', err);
+
+            // Add specific error handling for password complexity validation from the User model.
+            if (err.message.includes('Password must contain')) {
+                return res.render('admin/createUser', {
+                    error: err.message,
+                    user: req.user,
+                    formData: req.body,
+                    success: undefined
+                });
+            }
+
             await logSecurityEvent(req, 'USER_CREATED', 'User creation system error', 'HIGH');
             res.render('admin/createUser', {
                 error: 'An error occurred while creating the user. Please try again.',
@@ -152,6 +178,9 @@ class UserController {
             });
         }
     }
+    // =================================================================
+    // END: MODIFIED createUser METHOD
+    // =================================================================
 
     // Update user
     async updateUser(req, res) {
@@ -387,4 +416,4 @@ class UserController {
     }
 }
 
-module.exports = new UserController(); 
+module.exports = new UserController();

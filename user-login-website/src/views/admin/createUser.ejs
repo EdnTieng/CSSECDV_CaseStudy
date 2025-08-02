@@ -145,7 +145,21 @@
         .password-requirements li {
             margin-bottom: 0.25rem;
         }
-
+        
+        /* Added for security section */
+        .security-info-header {
+            color: #333;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #eee;
+        }
+        .security-info-header p {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+        /* End added */
+        
         .btn {
             display: inline-block;
             padding: 0.75rem 1.5rem;
@@ -244,27 +258,23 @@
         </div>
 
         <div class="form-container">
-            <% if (error) { %>
-                <div class="alert alert-error">
-                    <%= error %>
-                </div>
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div class="alert alert-error"><%= error %></div>
             <% } %>
 
-            <% if (success) { %>
-                <div class="alert alert-success">
-                    <%= success %>
-                </div>
+            <% if (typeof success !== 'undefined' && success) { %>
+                <div class="alert alert-success"><%= success %></div>
             <% } %>
 
             <form method="POST" action="<%= user.role === 'Administrator' ? '/admin/users/create' : '/admin/users/manage/create' %>">
                 <div class="form-row">
                     <div class="form-group">
                         <label for="username">Username *</label>
-                        <input type="text" id="username" name="username" value="<%= formData.username || '' %>" required>
+                        <input type="text" id="username" name="username" value="<%= locals.formData && formData.username ? formData.username : '' %>" required>
                     </div>
                     <div class="form-group">
                         <label for="email">Email Address *</label>
-                        <input type="email" id="email" name="email" value="<%= formData.email || '' %>" required>
+                        <input type="email" id="email" name="email" value="<%= locals.formData && formData.email ? formData.email : '' %>" required>
                     </div>
                 </div>
 
@@ -292,14 +302,42 @@
                 <div class="form-group">
                     <label for="role">User Role *</label>
                     <select id="role" name="role" required>
-                        <option value="">Select a role</option>
+                        <option value="" disabled <%= !(locals.formData && formData.role) ? 'selected' : '' %>>Select a role</option>
                         <% if (user.role === 'Administrator') { %>
-                            <option value="Administrator" <%= formData.role === 'Administrator' ? 'selected' : '' %>>Administrator</option>
-                            <option value="RoleA" <%= formData.role === 'RoleA' ? 'selected' : '' %>>Role A (Manager)</option>
+                            <option value="Administrator" <%= locals.formData && formData.role === 'Administrator' ? 'selected' : '' %>>Administrator</option>
+                            <option value="RoleA" <%= locals.formData && formData.role === 'RoleA' ? 'selected' : '' %>>Role A (Manager)</option>
                         <% } %>
-                        <option value="RoleB" <%= formData.role === 'RoleB' ? 'selected' : '' %>>Role B (User)</option>
+                        <option value="RoleB" <%= locals.formData && formData.role === 'RoleB' ? 'selected' : '' %>>Role B (User)</option>
                     </select>
                 </div>
+
+                <!-- ============================================= -->
+                <!-- START: ADDED SECURITY INFORMATION SECTION     -->
+                <!-- ============================================= -->
+                <div class="security-info-header">
+                    <h3>Security Information</h3>
+                    <p>Required for account recovery. The answer is case-sensitive.</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="securityQuestion">Security Question *</label>
+                    <select id="securityQuestion" name="securityQuestion" required>
+                        <option value="" disabled selected>-- Please choose a question --</option>
+                        <option value="What was your first pet's name?">What was your first pet's name?</option>
+                        <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
+                        <option value="What city were you born in?">What city were you born in?</option>
+                        <option value="What was the model of your first car?">What was the model of your first car?</option>
+                        <option value="What is the name of your favorite childhood friend?">What is the name of your favorite childhood friend?</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="securityAnswer">Security Answer *</label>
+                    <input type="password" id="securityAnswer" name="securityAnswer" required placeholder="Answer will be hidden">
+                </div>
+                <!-- ============================================= -->
+                <!-- END: ADDED SECURITY INFORMATION SECTION       -->
+                <!-- ============================================= -->
 
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">Create User</button>
@@ -313,9 +351,7 @@
         // Password confirmation validation
         document.getElementById('confirmPassword').addEventListener('input', function() {
             const password = document.getElementById('password').value;
-            const confirmPassword = this.value;
-            
-            if (password !== confirmPassword) {
+            if (password !== this.value) {
                 this.setCustomValidity('Passwords do not match');
             } else {
                 this.setCustomValidity('');
@@ -324,34 +360,12 @@
 
         document.getElementById('password').addEventListener('input', function() {
             const confirmPassword = document.getElementById('confirmPassword');
-            if (confirmPassword.value) {
-                if (this.value !== confirmPassword.value) {
-                    confirmPassword.setCustomValidity('Passwords do not match');
-                } else {
-                    confirmPassword.setCustomValidity('');
-                }
-            }
-        });
-
-        // Password strength indicator
-        document.getElementById('password').addEventListener('input', function() {
-            const password = this.value;
-            const requirements = {
-                length: password.length >= 8,
-                uppercase: /[A-Z]/.test(password),
-                lowercase: /[a-z]/.test(password),
-                number: /\d/.test(password),
-                special: /[@$!%*?&]/.test(password)
-            };
-
-            const allMet = Object.values(requirements).every(req => req);
-            
-            if (allMet) {
-                this.style.borderColor = '#28a745';
+            if (confirmPassword.value && this.value !== confirmPassword.value) {
+                confirmPassword.setCustomValidity('Passwords do not match');
             } else {
-                this.style.borderColor = '#dee2e6';
+                confirmPassword.setCustomValidity('');
             }
         });
     </script>
 </body>
-</html> 
+</html>

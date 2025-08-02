@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const path = require('path');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const flash = require('connect-flash'); // ✅ NEW
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
@@ -39,7 +40,7 @@ app.use(helmet({
 // Rate limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
+    max: 100,
     message: 'Too many requests from this IP, please try again later.',
     standardHeaders: true,
     legacyHeaders: false,
@@ -56,13 +57,23 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+        secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        maxAge: 24 * 60 * 60 * 1000,
         sameSite: 'strict'
     },
-    name: 'sessionId' // Change default session name
+    name: 'sessionId'
 }));
+
+// ✅ Flash middleware must come AFTER session middleware
+app.use(flash());
+
+// ✅ Expose flash messages to all views
+app.use((req, res, next) => {
+    res.locals.success = req.flash('success');
+    res.locals.error = req.flash('error');
+    next();
+});
 
 // View engine setup
 app.set('view engine', 'ejs');
@@ -79,8 +90,8 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/auth', authRoutes);
-app.use('/admin', userRoutes); // Changed from '/' to '/admin'
-app.use('/admin', auditRoutes); // Changed from '/' to '/admin'
+app.use('/admin', userRoutes);
+app.use('/admin', auditRoutes);
 
 // Public routes
 app.get('/', (req, res) => {
@@ -104,13 +115,13 @@ app.get('/dashboard', async (req, res) => {
 
         const User = require('./models/user');
         const user = await User.findById(req.session.userId).select('-password -passwordHistory');
-        
+
         if (!user || !user.isActive) {
             req.session.destroy();
             return res.redirect('/auth/login');
         }
 
-        res.render('dashboard', { 
+        res.render('dashboard', {
             user,
             lastLoginAt: req.session.lastLoginAt
         });
@@ -134,80 +145,87 @@ app.use((req, res) => {
 // Global error handling middleware
 app.use(async (err, req, res, next) => {
     console.error('Global error:', err);
-    
-    // Log security event for errors
+
     try {
         await logSecurityEvent(req, 'CRITICAL_OPERATION', `System error: ${err.message}`, 'HIGH');
     } catch (logError) {
         console.error('Failed to log security event:', logError);
     }
 
-    // Don't expose error details to client
     res.status(500).render('error', {
         error: 'Server Error',
         message: 'An unexpected error occurred. Please try again later.'
     });
 });
 
-// Sample users creation (for demo/testing)
+// =================================================================
+// START: MODIFIED SEEDER SCRIPT
+// =================================================================
 async function createSampleUsers() {
     const User = require('./models/user');
-    
-    // Clear existing users to ensure clean state
     await User.deleteMany({});
-    
+
     const users = [
-        { 
-            username: 'admin', 
+        {
+            username: 'admin',
             email: 'admin@example.com',
-            password: 'AdminPass123!', 
-            role: 'Administrator' 
+            password: 'AdminPass123!',
+            role: 'Administrator',
+            securityQuestion: 'What was your first dog\'s name?',
+            securityAnswer: 'dog'
         },
-        { 
-            username: 'manager', 
+        {
+            username: 'manager',
             email: 'manager@example.com',
-            password: 'ManagerPass123!', 
-            role: 'RoleA' 
+            password: 'ManagerPass123!',
+            role: 'RoleA',
+            securityQuestion: 'What was your first dog\'s name?',
+            securityAnswer: 'dogg'
         },
-        { 
-            username: 'user', 
+        {
+            username: 'user',
             email: 'user@example.com',
-            password: 'UserPass123!', 
-            role: 'RoleB' 
+            password: 'UserPass123!',
+            role: 'RoleB',
+            securityQuestion: 'What was your first dog\'s name?',
+            securityAnswer: 'doggg'
         }
     ];
 
+    console.log('Attempting to create sample users...');
     for (const userData of users) {
         try {
-            const user = new User(userData);
-            await user.save();
-            console.log(`Created user: ${userData.username} (${userData.role})`);
+            await User.create(userData);
+            console.log(`- Successfully created user: ${userData.username}`);
         } catch (error) {
             console.error(`Error creating user ${userData.username}:`, error.message);
         }
     }
 }
+// =================================================================
+// END: MODIFIED SEEDER SCRIPT
+// =================================================================
 
 // Connect to MongoDB and start server
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/user-login-db', { 
-    useNewUrlParser: true, 
-    useUnifiedTopology: true 
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/user-login-db', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
 })
-.then(async () => {
-    console.log('Connected to MongoDB');
-    await createSampleUsers();
-    
-    app.listen(PORT, () => {
-        console.log(`Secure Web Application is running on http://localhost:${PORT}`);
-        console.log('Sample users created:');
-        console.log('- admin (Administrator): AdminPass123!');
-        console.log('- manager (RoleA): ManagerPass123!');
-        console.log('- user (RoleB): UserPass123!');
+    .then(async () => {
+        console.log('Connected to MongoDB');
+        await createSampleUsers();
+
+        app.listen(PORT, () => {
+            console.log(`Secure Web Application is running on http://localhost:${PORT}`);
+            console.log('Sample users created:');
+            console.log('- admin (Administrator): AdminPass123!: dog');
+            console.log('- manager (RoleA): ManagerPass123!: dogg');
+            console.log('- user (RoleB): UserPass123!: doggg');
+        });
+    })
+    .catch(err => {
+        console.error('MongoDB connection error:', err);
+        process.exit(1);
     });
-})
-.catch(err => {
-    console.error('MongoDB connection error:', err);
-    process.exit(1);
-});
 
 module.exports = app;
