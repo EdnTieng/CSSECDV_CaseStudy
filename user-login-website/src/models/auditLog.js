@@ -41,6 +41,8 @@ const auditLogSchema = new mongoose.Schema({
             'INPUT_VALIDATION_FAILED',
             'CRITICAL_OPERATION',
             'PROFILE_VIEWED',
+            'PASSWORD_RESET_SUCCESS',
+            'PASSWORD_RESET_REQUEST',
             'REAUTH_SUCCESS' // Added this event type
         ],
         required: true

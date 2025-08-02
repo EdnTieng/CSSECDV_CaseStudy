@@ -199,8 +199,15 @@ userSchema.methods.resetFailedAttempts = function() {
 
 // Password change validation
 userSchema.methods.canChangePassword = function() {
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    return this.passwordChangedAt < oneDayAgo;
+    // Allow if passwordHistory is empty or only contains the initial password
+    if (!this.passwordHistory || this.passwordHistory.length < 1) {
+        return true;
+    }
+    // Otherwise, enforce 24-hour rule
+    const now = new Date();
+    const lastChanged = this.passwordChangedAt;
+    const hoursSinceChange = (now - lastChanged) / (1000 * 60 * 60);
+    return hoursSinceChange >= 24;
 };
 
 // Update last login information

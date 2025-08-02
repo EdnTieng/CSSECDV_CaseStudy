@@ -122,7 +122,7 @@ router.post('/change-password', requireAuth, async (req, res) => {
         return res.render('changePassword', { error: 'Current password is incorrect.', success: null, user: req.user });
     }
 
-    // 3. Check new password requirements (this check is also in your model, which is good practice!)
+    // 3. Check new password requirements
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
     if (!passwordRegex.test(newPassword)) {
         return res.render('changePassword', { error: 'New password does not meet requirements.', success: null, user: req.user });
@@ -133,13 +133,27 @@ router.post('/change-password', requireAuth, async (req, res) => {
         return res.render('changePassword', { error: 'New passwords do not match.', success: null, user: req.user });
     }
 
-    // 5. Set and save new password
+    // 5. Check password history (prevent reuse of last 5 passwords)
+    if (user.passwordHistory && user.passwordHistory.length > 0) {
+        const last5 = user.passwordHistory.slice(-5);
+        for (let i = 0; i < last5.length; i++) {
+            const isPrev = await bcrypt.compare(newPassword, last5[i].password);
+            if (isPrev) {
+                return res.render('changePassword', {
+                    error: 'You cannot reuse any of your last 5 passwords.',
+                    success: null,
+                    user: req.user
+                });
+            }
+        }
+    }
+
+    // 6. Set and save new password
     try {
         user.password = newPassword;
         await user.save();
         res.render('changePassword', { success: 'Password changed successfully!', error: null, user: req.user });
     } catch (err) {
-        // Catch errors from the model, like password history validation
         res.render('changePassword', { error: err.message, success: null, user: req.user });
     }
 });
