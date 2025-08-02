@@ -2,6 +2,7 @@ const express = require('express');
 const userController = require('../controllers/userController');
 const { requireAuth, requireAdministrator, requireRoleA, validateInput } = require('../middleware/auth');
 const { createUserSchema } = require('../validation/schemas');
+const User = require('../models/user'); // Assuming the User model is in models/User.js
 
 const router = express.Router();
 
@@ -34,6 +35,26 @@ router.get('/delete-account', requireAuth, userController.showDeleteAccountConfi
 router.post('/delete-account', requireAuth, userController.deleteOwnAccount);
 
 router.get('/users/:id', requireAuth, requireRoleA, userController.getUserDetails);
+
+// Edit user form
+router.get('/users/:id/edit', requireAuth, requireAdministrator, async (req, res) => {
+    const userToEdit = await User.findById(req.params.id);
+    if (!userToEdit) return res.status(404).send('User not found');
+    res.render('admin/editUser', { userToEdit, error: null, success: null });
+});
+
+// Handle edit user POST
+router.post('/users/:id/edit', requireAuth, requireAdministrator, async (req, res) => {
+    const userToEdit = await User.findById(req.params.id);
+    if (!userToEdit) return res.status(404).send('User not found');
+    const { role } = req.body;
+    if (!['Administrator', 'RoleB'].includes(role)) {
+        return res.render('admin/editUser', { userToEdit, error: 'Invalid role.', success: null });
+    }
+    userToEdit.role = role;
+    await userToEdit.save();
+    res.render('admin/editUser', { userToEdit, error: null, success: 'Role updated successfully.' });
+});
 
 // API routes for user management
 router.put('/api/users/:id', requireAuth, requireRoleA, userController.updateUser);

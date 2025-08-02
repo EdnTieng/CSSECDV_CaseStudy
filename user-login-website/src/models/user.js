@@ -176,12 +176,55 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
     }
 };
 
-// ... (rest of your userSchema.methods are unchanged)
-userSchema.methods.isAccountLocked = function() { /* ... */ };
-userSchema.methods.incrementFailedAttempts = function() { /* ... */ };
-userSchema.methods.resetFailedAttempts = function() { /* ... */ };
-userSchema.methods.canChangePassword = function() { /* ... */ };
-userSchema.methods.updateLastLogin = function(ipAddress) { /* ... */ };
+// Check if account is locked
+userSchema.methods.isAccountLocked = function() {
+    if (!this.accountLocked) return false;
+    if (this.lockoutUntil && this.lockoutUntil > new Date()) return true;
+    
+    // Auto-unlock after 30 minutes
+    if (this.lockoutUntil && this.lockoutUntil <= new Date()) {
+        this.accountLocked = false;
+        this.failedLoginAttempts = 0;
+        this.lockoutUntil = null;
+        return false;
+    }
+    return false;
+};
+
+// Increment failed login attempts
+userSchema.methods.incrementFailedAttempts = function() {
+    this.failedLoginAttempts += 1;
+    if (this.failedLoginAttempts >= 5) {
+        this.accountLocked = true;
+        this.lockoutUntil = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+    }
+};
+
+// Reset failed login attempts
+userSchema.methods.resetFailedAttempts = function() {
+    this.failedLoginAttempts = 0;
+    this.accountLocked = false;
+    this.lockoutUntil = null;
+};
+
+// Check if password is old enough to change (minimum 1 day)
+userSchema.methods.canChangePassword = function() {
+    // Allow if passwordHistory is empty or only contains the initial password
+    if (!this.passwordHistory || this.passwordHistory.length <= 1) {
+        return true;
+    }
+    // Otherwise, enforce 24-hour rule
+    const now = new Date();
+    const lastChanged = this.passwordChangedAt;
+    const hoursSinceChange = (now - lastChanged) / (1000 * 60 * 60);
+    return hoursSinceChange >= 24;
+};
+
+// Update last login
+userSchema.methods.updateLastLogin = function(ipAddress) {
+    this.lastLoginAt = new Date();
+    this.lastLoginIp = ipAddress;
+};
 
 const User = mongoose.model('User', userSchema);
 

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit User Role</title>
+</head>
+<body>
+    <h2>Edit User Role: <%= userToEdit.username %></h2>
+    <form method="POST" action="/admin/users/<%= userToEdit._id %>/edit">
+        <label for="role">Role:</label>
+        <select name="role" id="role" <%= userToEdit.role === 'Administrator' ? 'disabled' : '' %>>
+            <option value="Administrator" <%= userToEdit.role === 'Administrator' ? 'selected' : '' %>>Administrator</option>
+            <option value="RoleA" <%= userToEdit.role === 'RoleA' ? 'selected' : '' %>>RoleA</option>
+            <option value="RoleB" <%= userToEdit.role === 'RoleB' ? 'selected' : '' %>>RoleB</option>
+        </select>
+        <button type="submit" <%= userToEdit.role === 'Administrator' ? 'disabled' : '' %>>Save</button>
+    </form>
+    <a href="/admin/users">Back to Users</a>
+    <% if (userToEdit.role === 'Administrator') { %>
+        <div style="color:orange;">You cannot change the role of an Administrator.</div>
+    <% } %>
+    <% if (error) { %>
+        <div style="color:red;"><%= error %></div>
+    <% } %>
+    <% if (success) { %>
+        <div style="color:green;"><%= success %></div>
+    <% } %>
+</body>
+</html>

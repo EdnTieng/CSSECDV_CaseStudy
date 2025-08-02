@@ -124,6 +124,15 @@
             background: #c82333;
         }
 
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
         .users-table {
             background: white;
             border-radius: 10px;
@@ -301,8 +310,8 @@
                                     <div class="action-buttons">
                                         <a href="/admin/users/<%= userItem._id %>" class="btn btn-primary">View</a>
                                         <% if (userItem._id.toString() !== user._id.toString()) { %>
+                                            <a href="/admin/users/<%= userItem._id %>/edit" class="btn btn-secondary">Edit</a>
                                             <button class="btn btn-danger delete-user-btn" data-user-id="<%= userItem._id %>">Delete</button>
-
                                         <% } %>
                                     </div>
                                 </td>
@@ -317,4 +326,4 @@
     <script src="/js/deleteUser.js" defer></script>
 
 </body>
-</html> 
+</html>
