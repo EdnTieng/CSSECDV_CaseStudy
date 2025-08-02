@@ -96,9 +96,6 @@ router.post('/update-security', requireAuth, authController.updateSecurityQuesti
 // =================================================================
 
 // --- Change Password (for logged-in users) ---
-// Note: Your original file had the logic here. It's better practice to keep this logic
-// in the controller. I've left your original implementation as is, but you could
-// move it to authController.changePassword for consistency.
 router.get('/change-password', requireAuth, (req, res) => {
     res.render('changePassword', { error: null, success: null, user: req.user });
 });
