@@ -113,17 +113,16 @@
             border: 1px solid #c3e6cb;
         }
     </style>
+    <!-- Include SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
     <div class="container">
         <h1>My Profile</h1>
 
-        <!-- Flash messages for success/error on security update -->
+        <!-- Flash error -->
         <% if (locals.error && error.length > 0) { %>
             <div class="alert alert-error"><%= error %></div>
-        <% } %>
-        <% if (locals.success && success.length > 0) { %>
-            <div class="alert alert-success"><%= success %></div>
         <% } %>
 
         <div class="profile-info">
@@ -140,12 +139,12 @@
             <label>Last Login:</label>
             <div class="value"><%= user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : 'Never' %></div>
         </div>
-        
+
         <!-- START: SECURITY SETTINGS SECTION -->
         <div class="security-settings">
             <h2>Security Settings</h2>
             <p>Set or update your security question here. This is used for account recovery. You must provide your current password to make changes.</p>
-            
+
             <% if (user.securityQuestion) { %>
                 <div style="margin-bottom: 1rem; background: #e8f4fd; padding: 1rem; border-radius: 5px;">
                     <strong>Your current question is:</strong> <%= user.securityQuestion %>
@@ -190,10 +189,23 @@
                 <a href="/users/delete-account" class="delete-account-btn">Delete My Account</a>
             </div>
         <% } %>
-        
+
         <a href="/dashboard" class="back-link">Back to Dashboard</a>
         <a href="/auth/change-password" class="back-link" style="background: #34a853;">Change Password</a>
-
     </div>
+
+    <!-- Success modal -->
+    <% if (locals.success && success.length > 0) { %>
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Updated Successfully',
+                text: "<%= success %>",
+                confirmButtonColor: '#667eea'
+            }).then(() => {
+                window.location.href = "/dashboard";
+            });
+        </script>
+    <% } %>
 </body>
 </html>

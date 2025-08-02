@@ -320,7 +320,7 @@ class AuthController {
 
             if (!securityQuestion || !securityAnswer || !currentPassword) {
                 req.flash('error', 'All fields are required to update your security question.');
-                return res.redirect('/profile');
+                res.redirect('/dashboard');
             }
 
             const user = await User.findById(userId);
@@ -330,7 +330,7 @@ class AuthController {
             if (!isPasswordValid) {
                 await logSecurityEvent(req, 'ACCESS_DENIED', `Update security question failed due to incorrect password for user: ${user.username}`, 'MEDIUM');
                 req.flash('error', 'Your current password was incorrect.');
-                return res.redirect('/profile');
+                res.redirect('/dashboard');
             }
 
             // Update the user's security info. The pre-save hook will hash the answer.
@@ -340,13 +340,13 @@ class AuthController {
 
             await logSecurityEvent(req, 'SECURITY_INFO_UPDATED', `Security question updated for user: ${user.username}`, 'LOW');
             req.flash('success', 'Your security question and answer have been updated successfully.');
-            res.redirect('/profile');
+            res.redirect('/dashboard');
 
         } catch (err) {
             console.error('Update Security Question error:', err);
             await logSecurityEvent(req, 'CRITICAL_OPERATION', `Update security question error: ${err.message}`, 'HIGH');
             req.flash('error', 'An unexpected error occurred. Please try again.');
-            res.redirect('/profile');
+            res.redirect('/dashboard');
         }
     }
     // =================================================================
